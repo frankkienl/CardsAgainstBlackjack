@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
+<LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+  
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/login_header"
+                    style="@style/textStyle_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Login" />
+
+                <TextView
+                    style="@style/textStyle_details"
+                    android:text="\nLogin to sync to you schedule between all you devices.\n\nLogging in is required to participate in the QR Hunt!\n\nUse the button below to login."
+                    android:layout_below="@id/login_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.gms.common.SignInButton
+                    android:layout_alignParentBottom="true"
+                    android:paddingBottom="16dp"
+                    android:id="@+id/sign_in_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <Button
+                    android:text="@string/sign_out"
+                    android:id="@+id/sign_out_button"
+                    android:visibility="gone"
+                    android:layout_below="@id/sign_in_button"
+                    android:paddingBottom="16dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <Button
+                    android:id="@+id/view_achievements"
+                    android:text="@string/view_achievements"
+                    android:visibility="gone"
+                    android:layout_above="@id/sign_out_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </RelativeLayout>
+</LinearLayout>

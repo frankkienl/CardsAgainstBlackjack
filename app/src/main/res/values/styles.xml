@@ -1,0 +1,19 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+
+    <style name="textStyle_header">
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:textSize">26sp</item>
+    </style>
+    <style name="textStyle_details">
+
+    </style>
+    <style name="textStyle_speakername">
+        <item name="android:textSize">26sp</item>
+    </style>
+</resources>
