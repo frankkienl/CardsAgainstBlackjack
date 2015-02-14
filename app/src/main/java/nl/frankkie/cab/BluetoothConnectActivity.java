@@ -15,6 +15,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -36,6 +38,7 @@ public class BluetoothConnectActivity extends Activity {
     boolean enableItMyself = false; //Enable bluetooth without user-consent.
     public static final int REQUEST_ENABLE_BT = 9001;
     BluetoothStateBroadcastReceiver broadcastReceiver;
+    BluetoothServerThread serverThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +92,14 @@ public class BluetoothConnectActivity extends Activity {
         }
     }
 
+    public void updateUI() {
+        //Update the UI when players are joined
+        //TODO
+        String text = "";
+        Toast.makeText(thisAct, "player joined", Toast.LENGTH_LONG).show();
+        ((TextView) findViewById(R.id.bluetooth_joined_tv)).setText(text);
+    }
+
     public void initBluetooth() {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
@@ -127,6 +138,10 @@ public class BluetoothConnectActivity extends Activity {
             Toast.makeText(thisAct, "Stopping Bluetooth host", Toast.LENGTH_LONG).show();
             startedHost = false;
             isHost = false;
+            if (serverThread != null) {
+                //kill
+                serverThread.cancel();
+            }
             //revert button text
             ((Button) findViewById(R.id.bluetooth_host)).setText("Host");
             return;
@@ -140,6 +155,8 @@ public class BluetoothConnectActivity extends Activity {
         findViewById(R.id.bluetooth_join).setEnabled(false);
         ((Button) findViewById(R.id.bluetooth_host)).setText("Cancel Host");
         //
+        serverThread = new BluetoothServerThread();
+        serverThread.start();
     }
 
     public class BluetoothStateBroadcastReceiver extends BroadcastReceiver {
@@ -164,6 +181,7 @@ public class BluetoothConnectActivity extends Activity {
         //public, to let other threads this, when its needs to be killed.
         BluetoothServerSocket serverSocket;
         boolean killSwitch = false;
+        ArrayList<BluetoothServerToClientThread> clientThreads = new ArrayList<>();
 
         @Override
         public void run() {
@@ -174,7 +192,9 @@ public class BluetoothConnectActivity extends Activity {
                     BluetoothSocket clientSocket = serverSocket.accept();
                     if (clientSocket != null) {
                         //its null when canceled.     
-
+                        BluetoothServerToClientThread t = new BluetoothServerToClientThread(clientSocket);
+                        clientThreads.add(t);
+                        t.start();
                     }
                 }
             } catch (Exception e) {
@@ -199,6 +219,15 @@ public class BluetoothConnectActivity extends Activity {
         PrintWriter printWriter;
         boolean killSwitch = false;
         BluetoothDevice device;
+        boolean isInited = false;
+
+        public BluetoothDevice getDevice() {
+            return device;
+        }
+
+        public BluetoothServerToClientThread(BluetoothSocket socket) {
+            this.socket = socket;
+        }
 
         @Override
         public void run() {
@@ -209,6 +238,9 @@ public class BluetoothConnectActivity extends Activity {
                 printWriter = new PrintWriter(outputStream);
                 InputStream inputStream = socket.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                isInited = true;
+                //Update UI to show new device!
+                updateUI();
                 String line = null;
                 while (!killSwitch) {
                     line = br.readLine();
@@ -230,11 +262,16 @@ public class BluetoothConnectActivity extends Activity {
 
         public void cancel() {
             killSwitch = true;
+            isInited = false;
             try {
                 socket.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        public void updateUI() {
+                        
         }
     }
 }
