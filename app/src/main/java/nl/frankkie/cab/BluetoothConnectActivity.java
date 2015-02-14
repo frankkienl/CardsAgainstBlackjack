@@ -2,6 +2,8 @@ package nl.frankkie.cab;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -9,6 +11,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 /**
@@ -18,6 +21,7 @@ public class BluetoothConnectActivity extends Activity {
 
     BluetoothConnectActivity thisAct;
     boolean isHost = false;
+    boolean startedHost = false;
     boolean enableItMyself = false; //Enable bluetooth without user-consent.
     public static final int REQUEST_ENABLE_BT = 9001;
     BluetoothStateBroadcastReceiver broadcastReceiver;
@@ -35,7 +39,7 @@ public class BluetoothConnectActivity extends Activity {
         super.onResume();
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        broadcastReceiver = new BluetoothStateBroadcastReceiver(thisAct);
+        broadcastReceiver = new BluetoothStateBroadcastReceiver();
         Intent stickyIntent = registerReceiver(broadcastReceiver, filter);
         if (stickyIntent != null) {
             Log.e("CAB", "STATE: " + stickyIntent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1));
@@ -107,15 +111,44 @@ public class BluetoothConnectActivity extends Activity {
     }
 
     public void startBluetoothHost() {
-        Toast.makeText(thisAct, "Starting Bluetooth host", Toast.LENGTH_LONG).show();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(thisAct);
-        prefs.edit().putBoolean("bluetooth_is_host", true).commit();
+        if (startedHost) {
+            //press again, is cancel
+            Toast.makeText(thisAct, "Stopping Bluetooth host", Toast.LENGTH_LONG).show();
+            startedHost = false;
+            isHost = false;
+            //revert button text
+            ((Button) findViewById(R.id.bluetooth_host)).setText("Host");
+            return;
+        }
+        startedHost = true;
         isHost = true;
+        Toast.makeText(thisAct, "Starting Bluetooth host, wait for others to join", Toast.LENGTH_LONG).show();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(thisAct);
+        prefs.edit().putBoolean("bluetooth_is_host", true).commit();        
         //cannot join if you're the host.
         findViewById(R.id.bluetooth_join).setEnabled(false);
+        ((Button) findViewById(R.id.bluetooth_host)).setText("Cancel Host");
         //
     }
-    
-    
-    
+
+    public class BluetoothStateBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //TODO
+            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            if (!adapter.isEnabled()) {
+                Toast.makeText(thisAct, "Bluetooth is enabled", Toast.LENGTH_LONG).show();
+                findViewById(R.id.bluetooth_host).setEnabled(true);
+                if (!isHost) {
+                    findViewById(R.id.bluetooth_join).setEnabled(true);
+                }
+            }
+        }
+    }
+
+    public class BluetoothServerThread extends Thread {
+        
+
+    }
 }
